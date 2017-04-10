@@ -1,0 +1,46 @@
+--- a/drivers/input/misc/powermate.c	2017-04-09 16:51:02.405936523 -0300
++++ b/drivers/input/misc/powermate.c	2017-04-10 17:18:01.781099930 -0300
+@@ -104,10 +104,23 @@
+ 			__func__, urb->status);
+ 		goto exit;
+ 	}
+-
+ 	/* handle updates to device state */
+-	input_report_key(pm->input, BTN_0, pm->data[0] & 0x01);
+-	input_report_rel(pm->input, REL_DIAL, pm->data[1]);
++	//input_report_key(pm->input, BTN_0, pm->data[0] & 0x01);
++	//input_event(pm->input,EV_
++	/**
++	/* Report powermate button as mouse middle buton.
++	/*
++	/* Since kodi handles the middle mouse button as right click
++	/* you must use mouse rightclick in keymaps, not middleclick.
++	/*
++	/* See xbmc/input/linux/LinuxInputDevices.cpp
++	**/
++	input_report_key(pm->input, BTN_MIDDLE, pm->data[0] & 0x01);
++	/**
++	/* Handle powermate dial as a mouse wheel.
++	**/
++	input_report_rel(pm->input, REL_WHEEL, pm->data[1]);
++
+ 	input_sync(pm->input);
+ 
+ exit:
+@@ -367,8 +380,14 @@
+ 
+ 	input_dev->evbit[0] = BIT_MASK(EV_KEY) | BIT_MASK(EV_REL) |
+ 		BIT_MASK(EV_MSC);
+-	input_dev->keybit[BIT_WORD(BTN_0)] = BIT_MASK(BTN_0);
+-	input_dev->relbit[BIT_WORD(REL_DIAL)] = BIT_MASK(REL_DIAL);
++	/* report the push button BTN_0 as BTN_MIDDLE*/
++	input_dev->keybit[BIT_WORD(BTN_MIDDLE)] |= BIT_MASK(BTN_MIDDLE);
++	/* report the dial REL_DIAL as REL_WHEEL*/
++	input_dev->relbit[BIT_WORD(REL_WHEEL)] |= BIT_MASK(REL_WHEEL);
++        /* report an additional dummy relative axis, so kodi will use the powermate */
++	/* as a mouse, instead of ignoring it */
++	input_dev->relbit[BIT_WORD(REL_X)] |= BIT_MASK(REL_X);
++
+ 	input_dev->mscbit[BIT_WORD(MSC_PULSELED)] = BIT_MASK(MSC_PULSELED);
+ 
+ 	/* get a handle to the interrupt data pipe */
